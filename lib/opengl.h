@@ -5,10 +5,13 @@
 
 #include <OpenGLES/ES2/gl.h>
 
+#elif defined(GLFW)
+
+#include <GLFW/glfw3.h>
+
 #else
 
-//#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <GL/glew.h>
 
 #endif
 
