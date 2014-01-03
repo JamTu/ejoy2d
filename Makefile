@@ -42,12 +42,12 @@ mingw : SRC += mingw/window.c mingw/winfw.c mingw/winfont.c
 
 mingw : $(SRC) ej2d
 
-linux : TARGET := ej2d
-linux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) $(shell pkg-config --cflags glfw3)
-linux : LDFLAGS += $(shell pkg-config --static --libs glfw3) -lfreetype -llua -lm -ldl
-linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
+glfwlinux : TARGET := ej2d
+glfwlinux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) $(shell pkg-config --cflags glfw3)
+glfwlinux : LDFLAGS += $(shell pkg-config --static --libs glfw3) -lfreetype -llua -lm -ldl
+glfwlinux : SRC += glfw/window.c glfw/winfw.c glfw/winfont.c
 
-linux : $(SRC) ej2d
+glfwlinux : $(SRC) ej2d
 
 macos : TARGET := ej2d
 macos : CFLAGS += -L/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
