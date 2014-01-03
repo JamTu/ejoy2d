@@ -1,5 +1,4 @@
 #include <GLFW/glfw3.h>
-#define GLFW
 
 /* include some silly stuff */
 #include <stdio.h>

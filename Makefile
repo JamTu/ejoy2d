@@ -44,20 +44,22 @@ mingw : SRC += mingw/window.c mingw/winfw.c mingw/winfont.c
 
 mingw : $(SRC) ej2d
 
-<<<<<<< HEAD
+glfwlinux : OS := LINUX
+glfwlinux : 
 glfwlinux : TARGET := ej2d
-glfwlinux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) $(shell pkg-config --cflags glfw3)
+glfwlinux : CFLAGS += -DGLFW -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) $(shell pkg-config --cflags glfw3)
 glfwlinux : LDFLAGS += $(shell pkg-config --static --libs glfw3) -lfreetype -llua -lm -ldl
 glfwlinux : SRC += glfw/window.c glfw/winfw.c glfw/winfont.c
-=======
+
+glfwlinux : $(SRC) ej2d
+
 linux : OS := LINUX
 linux : TARGET := ej2d
 linux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
 linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -llua -lm
 linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
->>>>>>> cloudwu
 
-glfwlinux : $(SRC) ej2d
+linux : $(SRC) ej2d
 
 macosx : OS := MACOSX
 macosx : TARGET := ej2d
