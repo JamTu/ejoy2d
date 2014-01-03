@@ -10,8 +10,18 @@ local particle = {}
 
 local particle_meta = {__index = {mat = {}, col = {}}}
 
-function particle_meta.__index:update(dt, x, y)
-	c.update(self.particle, dt, x, y)
+function particle_meta.__index:update(dt)
+	if not self.is_active then
+		return false
+	end
+
+	self.is_active = c.update(self.particle, dt)
+
+	if not self.is_active and self.end_callback ~= nil then
+		self.end_callback()
+		self.end_callback = nil
+	end
+	return self.is_active
 end
 
 function particle_meta.__index:data()
@@ -27,26 +37,30 @@ function particle_meta.__index:draw(pos)
 end
 
 function particle.preload(config_path)
+	-- TODO pack particle data to c
 	local meta = dofile(config_path..".lua")
+	local configs = dofile(config_path.."_particle_config.lua")
 	for _, v in ipairs(meta) do
 		if v.type == "particle" and v.export ~= nil then
-			rawset(particle_configs, v.export, v)
+			config = rawget(configs, v.export)
+			config.picture = v.component[1]["id"]
+			rawset(particle_configs, v.export, config)
 		end
 	end
 end
 
-function particle.new(name)
+function particle.new(name, callback)
 	local config = rawget(particle_configs, name)
-	assert(config ~= null, "Cannot found particle:"..name)
-	assert(config.data ~= null, "Invalid particle config:"..name)
-	local texid = config.component[1]["id"]
-	local cobj = c.new(config.data)
+	local texid = config.picture
+	local cobj = c.new(config)
 
 	if cobj then
 		return debug.setmetatable({particle = cobj,
 			sprite = ej.sprite("particle", texid),
-			src_blend = config.data.blendFuncSource,
-			dst_blend = config.data.blendFuncDestination},
+			end_callback = callback,
+			is_active = true,
+			src_blend = config.blendFuncSource,
+			dst_blend = config.blendFuncDestination},
 			particle_meta)
 	end
 end

@@ -1,6 +1,6 @@
 .PHONY : mingw ej2d linux undefined
 
-CFLAGS := -g -Wall -Ilib
+CFLAGS = -g -Wall -Ilib -D EJOY2D_OS=$(OS)
 LDFLAGS :=
 
 SRC := \
@@ -19,12 +19,13 @@ lib/lmatrix.c \
 lib/dfont.c \
 lib/label.c \
 lib/particle.c \
-lib/lparticle.c
+lib/lparticle.c \
+lib/scissor.c
 
 UNAME=$(shell uname)
 SYS=$(if $(filter Linux%,$(UNAME)),linux,\
 	    $(if $(filter MINGW%,$(UNAME)),mingw,\
-	    $(if $(filter Darwin%,$(UNAME)),macos,\
+	    $(if $(filter Darwin%,$(UNAME)),macosx,\
 	        undefined\
 )))
 
@@ -32,9 +33,10 @@ all: $(SYS)
 
 undefined:
 	@echo "I can't guess your platform, please do 'make PLATFORM' where PLATFORM is one of these:"
-	@echo "      linux mingw macos"
+	@echo "      linux mingw macosx"
 
 
+mingw : OS := WINDOWS
 mingw : TARGET := ej2d.exe
 mingw : CFLAGS += -I/usr/include -I/usr/local/include
 mingw : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32 -L/usr/local/bin -llua52
@@ -42,19 +44,28 @@ mingw : SRC += mingw/window.c mingw/winfw.c mingw/winfont.c
 
 mingw : $(SRC) ej2d
 
+<<<<<<< HEAD
 glfwlinux : TARGET := ej2d
 glfwlinux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) $(shell pkg-config --cflags glfw3)
 glfwlinux : LDFLAGS += $(shell pkg-config --static --libs glfw3) -lfreetype -llua -lm -ldl
 glfwlinux : SRC += glfw/window.c glfw/winfw.c glfw/winfont.c
+=======
+linux : OS := LINUX
+linux : TARGET := ej2d
+linux : CFLAGS += -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
+linux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -llua -lm
+linux : SRC += posix/window.c posix/winfw.c posix/winfont.c
+>>>>>>> cloudwu
 
 glfwlinux : $(SRC) ej2d
 
-macos : TARGET := ej2d
-macos : CFLAGS += -L/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags)
-macos : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm
-macos : SRC += posix/window.c posix/winfw.c posix/winfont.c
+macosx : OS := MACOSX
+macosx : TARGET := ej2d
+macosx : CFLAGS += -I/usr/X11R6/include -I/usr/include -I/usr/local/include $(shell freetype-config --cflags) -D __MACOSX
+macosx : LDFLAGS += -L/usr/X11R6/lib  -lGLEW -lGL -lX11 -lfreetype -llua -lm
+macosx : SRC += posix/window.c posix/winfw.c posix/winfont.c
 
-macos : $(SRC) ej2d
+macosx : $(SRC) ej2d
 
 ej2d :
 	gcc $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)

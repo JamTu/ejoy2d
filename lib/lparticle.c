@@ -17,7 +17,7 @@ dict_float(lua_State *L, const char *key) {
 static int
 dict_int(lua_State *L, const char *key) {
 	lua_getfield(L, -1, key);
-	int v = lua_tointeger(L, -1);
+	int v = (int)lua_tointeger(L, -1);
 	lua_pop(L,1);
 	return v;
 }
@@ -28,7 +28,7 @@ color4f(struct color4f *c4f) {
 	uint8_t gg = (int)(c4f->g*255);
 	uint8_t bb = (int)(c4f->b*255);
 	uint8_t aa = (int)(c4f->a*255);
-	return (uint32_t)aa << 24 | (uint32_t)rr << 16 | (uint32_t)gg << 8 | bb;
+	return (uint32_t)rr << 24 | (uint32_t)gg << 16 | (uint32_t)bb << 8 | aa;
 }
 
 static int
@@ -115,7 +115,7 @@ static struct particle_system *
 _new(struct lua_State *L) {
 	int maxParticles = dict_int(L,"maxParticles");
 	int totalsize = maxParticles * (sizeof(struct particle) + sizeof(struct matrix) + sizeof(struct particle_config));
-	struct particle_system * ps = lua_newuserdata(L, totalsize);
+	struct particle_system * ps = (struct particle_system *)lua_newuserdata(L, totalsize);
 	lua_insert(L, -2);
 	memset(ps, 0, totalsize);
 	init_with_particles(ps, maxParticles);
@@ -139,7 +139,7 @@ lnew(lua_State *L) {
 static int
 lupdate(lua_State *L) {
 	luaL_checktype(L,1,LUA_TUSERDATA);
-	struct particle_system *ps = lua_touserdata(L,1);
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	float dt = luaL_checknumber(L,2);
 	// float x = luaL_checknumber(L,3);
 	// float y = luaL_checknumber(L,4);
@@ -147,7 +147,7 @@ lupdate(lua_State *L) {
 	// ps->sourcePosition.y = y;
 	particle_system_update(ps, dt);
 
-	lua_pushboolean(L, ps->isActive);
+	lua_pushboolean(L, ps->isActive || ps->isAlive);
 	return 1;
 }
 
@@ -156,7 +156,7 @@ ldata(lua_State *L) {
 	luaL_checktype(L,1,LUA_TUSERDATA);
 	luaL_checktype(L,2,LUA_TTABLE);
 	luaL_checktype(L,3,LUA_TTABLE);
-	struct particle_system *ps = lua_touserdata(L,1);
+	struct particle_system *ps = (struct particle_system *)lua_touserdata(L, 1);
 	int n = ps->particleCount;
 	int i;
 	for (i=0;i<n;i++) {
