@@ -10,7 +10,7 @@
 
 FT_Library  library;
 
-static const char* TTFONT = "/usr/share/fonts/wenquanyi/wqy-zenhei/wqy-zenhei.ttc";
+static const char* TTFONT = "/usr/share/fonts/truetype/XHei_Mono.Ubuntu.ttc";
 
 static void _fault(int errcode, const char * msg) {
     if (errcode) 
