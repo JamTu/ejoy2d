@@ -730,13 +730,13 @@ return {
 		{id = 37 },
 		{id = 23, name = 'resource' },
 		{id = 39, name = 'label' },
-		{id = 40, name = 'pannel' },
+		{id = 40, name = 'panel' },
 	},
 	{
 		{
-			{ index = 7, mat = {1024,0,0,1024,-400,-400}},
+			{ index = 7, touch = 1, mat = {1024,0,0,1024,-400,-400}},
 			0,1,2,3,4,5,
-			{ index = 6, mat = {1024,0,0,1024,-800,800}},
+			{ index = 6, touch = 1, mat = {1024,0,0,1024,-800,800}},
 		},
 	},
 },

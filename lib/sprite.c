@@ -132,6 +132,7 @@ void
 sprite_init(struct sprite * s, struct sprite_pack * pack, int id, int sz) {
 	if (id < 0 || id >=	pack->n)
 		return;
+	s->parent = NULL;
 	s->t.mat = NULL;
 	s->t.color = 0xffffffff;
 	s->t.additive = 0;
@@ -171,7 +172,16 @@ sprite_mount(struct sprite *parent, int index, struct sprite *child) {
 	assert(parent->type == TYPE_ANIMATION);
 	struct pack_animation *ani = parent->s.ani;
 	assert(index >= 0 && index < ani->component_number);
+	struct sprite * oldc = parent->data.children[index];
+	if (oldc) {
+		oldc->parent = NULL;
+	}
 	parent->data.children[index] = child;
+	if (child) {
+		assert(child->parent == NULL);
+		child->name = ani->component[index].name;
+		child->parent = parent;
+	}
 }
 
 static int
@@ -487,7 +497,7 @@ check_child(struct sprite *s, struct srt *srt, struct sprite_trans * t, struct p
 	int testin = test_child(child, srt, ct, x, y, &tmp);
 	if (testin) {
 		// if child capture message, return it
-		*touch = child;
+		*touch = tmp;
 		return 1;
 	}
 	if (tmp) {
@@ -573,7 +583,11 @@ test_child(struct sprite *s, struct srt *srt, struct sprite_trans * ts, int x, i
 	}
 	matrix_srt(&mat, srt);
 	struct matrix imat;
-	matrix_inverse(&mat, &imat);
+	if (matrix_inverse(&mat, &imat)) {
+		// invalid matrix
+		*touch = NULL;
+		return 0;
+	}
 	int *m = imat.m;
 
 	int xx = (x * m[0] + y * m[2]) / 1024 + m[4];
