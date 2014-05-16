@@ -4,7 +4,8 @@
 
 #include <jni.h>
 #include <EGL/egl.h>
-//#include <android/sensor.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <android_native_app_glue.h>
 
 #include <errno.h>
@@ -32,10 +33,6 @@ struct saved_state {
 struct engine {
     struct android_app* app;
 
-    //ASensorManager* sensorManager;
-    //const ASensor* accelerometerSensor;
-    //ASensorEventQueue* sensorEventQueue;
-
     int animating;
     EGLDisplay display;
     EGLSurface surface;
@@ -43,31 +40,14 @@ struct engine {
     int32_t width;
     int32_t height;
     struct saved_state state;
-
     const char* writeablePath;
 };
-
-
-static uint32_t
-_gettime(void) {
-	uint32_t t;
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	t = (uint32_t)(tv.tv_sec & 0xffffff) * 100;
-	t += tv.tv_usec / 10000;
-
-	return t;
-}
-
 
 /**
  * Initialize an EGL context for the current display.
  */
 static int engine_init_display(struct engine* engine) {
-    // initialize OpenGL ES and EGL
-
-    /*
-     * Here specify the attributes of the desired configuration.
+    /* Here specify the attributes of the desired configuration.
      * Below, we select an EGLConfig with at least 8 bits per color
      * component compatible with on-screen windows
      */
@@ -101,8 +81,9 @@ static int engine_init_display(struct engine* engine) {
     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 
     ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
-
     surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
+
+    /* for opengles 2.0 */
     const EGLint ContextAttribList[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
@@ -127,7 +108,8 @@ static int engine_init_display(struct engine* engine) {
     engine->state.angle = 0;
 
     char fontname[MAXFILENAME+16] = "";
-    snprintf(fontname,MAXFILENAME,"%s/examples/asset/kaiti_GB2312.ttf",engine->writeablePath);
+    snprintf(fontname,MAXFILENAME,"%s/examples/asset/kaiti_GB2312.ttf",
+        engine->writeablePath);
     font_init(fontname);
     ejoy2d_win_init(engine->width, engine->height, engine->writeablePath);
     return 0;
@@ -138,7 +120,7 @@ static int engine_init_display(struct engine* engine) {
  */
 static void engine_draw_frame(struct engine* engine) {
     if (engine->display == NULL) {
-        // No display.
+        pf_log("engine_draw_frame : No display.");
         return;
     }
 
@@ -218,24 +200,20 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_GAINED_FOCUS:
             // When our app gains focus, we start monitoring the accelerometer.
             engine->animating = 1;
-            //if (engine->accelerometerSensor != NULL) {
-            //    ASensorEventQueue_enableSensor(engine->sensorEventQueue,
-            //            engine->accelerometerSensor);
-            //    // We'd like to get 60 events per second (in us).
-            //    ASensorEventQueue_setEventRate(engine->sensorEventQueue,
-            //            engine->accelerometerSensor, (1000L/60)*1000);
-            //}
+            ejoy2d_win_resume();
             break;
         case APP_CMD_LOST_FOCUS:
-            // When our app loses focus, we stop monitoring the accelerometer.
-            // This is to avoid consuming battery while not being used.
-            //if (engine->accelerometerSensor != NULL) {
-            //    ASensorEventQueue_disableSensor(engine->sensorEventQueue,
-            //            engine->accelerometerSensor);
-            //}
             // Also stop animating.
             engine->animating = 0;
             engine_draw_frame(engine);
+            break;
+        case APP_CMD_CONFIG_CHANGED:
+            if (engine->app->window != NULL
+                && ((engine->width != ANativeWindow_getWidth(app->window))
+                    || (engine->height != ANativeWindow_getHeight(app->window)))) {
+                engine_handle_cmd(app, APP_CMD_TERM_WINDOW);
+                engine_handle_cmd(app, APP_CMD_INIT_WINDOW);
+            }
             break;
     }
 }
@@ -272,7 +250,7 @@ int copyAssetFile(AAssetManager *mgr, const char* writeablePath) {
         off_t fz = AAsset_getLength(asset);
         const void* buf = AAsset_getBuffer(asset);
         file = fopen(tofname, "wb");
-        if (file!=NULL) {
+        if (file) {
             fwrite(buf, sizeof(char), fz, file);
             fclose(file);
         }
@@ -305,6 +283,7 @@ const char* getWriteablePath(ANativeActivity *activity) {
     jstring path = (jstring)(*env)->CallObjectMethod(env,obj_File, mid_getAbsolutePath);
     const char* writeablePath = (*env)->GetStringUTFChars(env,path, NULL);
     pf_log("writeablePath by jni: %s",writeablePath);
+    (*vm)->DetachCurrentThread(vm);
     return writeablePath;
 }
 
@@ -328,15 +307,7 @@ void android_main(struct android_app* state) {
     engine.app = state;
 
     // init res : copy assets file to writeable path
-    copyAssetFile(state->activity->assetManager,
-            engine.writeablePath);
-
-    // Prepare to monitor accelerometer
-    //engine.sensorManager = ASensorManager_getInstance();
-    //engine.accelerometerSensor = ASensorManager_getDefaultSensor(engine.sensorManager,
-    //        ASENSOR_TYPE_ACCELEROMETER);
-    //engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager,
-    //        state->looper, LOOPER_ID_USER, NULL, NULL);
+    copyAssetFile(state->activity->assetManager,engine.writeablePath);
 
     if (state->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
@@ -344,7 +315,6 @@ void android_main(struct android_app* state) {
     }
 
     // loop waiting for stuff to do.
-
     while (1) {
         // Read all pending events.
         int ident;
@@ -362,19 +332,6 @@ void android_main(struct android_app* state) {
                 source->process(state, source);
             }
 
-            // If a sensor has data, process it now.
-            //if (ident == LOOPER_ID_USER) {
-            //    if (engine.accelerometerSensor != NULL) {
-            //        ASensorEvent event;
-            //        while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
-            //                &event, 1) > 0) {
-            //            pf_log("accelerometer: x=%f y=%f z=%f",
-            //                    event.acceleration.x, event.acceleration.y,
-            //                    event.acceleration.z);
-            //        }
-            //    }
-            //}
-
             // Check if we are exiting.
             if (state->destroyRequested != 0) {
                 engine_term_display(&engine);
@@ -384,20 +341,13 @@ void android_main(struct android_app* state) {
 
         if (engine.animating) {
             // Done with events; draw next animation frame.
-            engine.state.angle += 0.01f;
-            if (engine.state.angle > 1) {
-                engine.state.angle = 0;
-                //ejoy2d_win_update();
-                //engine_draw_frame(&engine);
-            }
-
-            uint32_t current = _gettime();
-            if (current - timestamp >= UPDATE_INTERVAL) {
-                timestamp = current;
+            engine.state.angle += 0.1f;
+            if (engine.state.angle >= UPDATE_INTERVAL) {
                 engine.state.angle = 0;
                 ejoy2d_win_update();
                 engine_draw_frame(&engine);
-            } else {
+            }
+            else {
                 usleep(1000);
             }
         }

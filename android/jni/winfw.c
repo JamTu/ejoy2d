@@ -32,9 +32,6 @@ static const char * startscript =
 "script = path..[[/]]..script\n"
 "package.path = path .. [[/?.lua;]] .. path .. [[/?/init.lua;./?.lua;./?/init.lua]]\n"
 "local f = loadfile(script)\n"
-"print(\"path:\",path)"
-"print(\"script:\",script)"
-"print(\"f:\",f)"
 "f(script)\n";
 
 static int
