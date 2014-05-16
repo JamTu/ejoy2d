@@ -6,8 +6,7 @@ LOCAL_SRC_FILES:= \
 	unzip.c \
 	miniunz.c \
 
-LOCAL_C_INCLUDES += \
-	$(LOCAL_PATH)
+LOCAL_C_INCLUDES :=	$(LOCAL_PATH)
 
 LOCAL_MODULE:= miniunz
 LOCAL_MODULE_FILENAME:= libminiunz
