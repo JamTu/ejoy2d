@@ -1,5 +1,6 @@
 #include "ppm.h"
 #include "texture.h"
+#include "array.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -165,7 +166,7 @@ static int
 loadppm(lua_State *L) {
 	size_t sz = 0;
 	const char * filename = luaL_checklstring(L, 1, &sz);
-	char tmp[sz + 5];
+	ARRAY(char, tmp, sz+5);
 	sprintf(tmp, "%s.ppm", filename);
 	FILE *rgb = fopen(tmp, "rb");
 	sprintf(tmp, "%s.pgm", filename);
@@ -227,7 +228,7 @@ loadtexture(lua_State *L) {
 	int id = (int)luaL_checkinteger(L,1);
 	size_t sz = 0;
 	const char * filename = luaL_checklstring(L, 2, &sz);
-	char tmp[sz + 5];
+	ARRAY(char, tmp, sz + 5);
 	sprintf(tmp, "%s.ppm", filename);
 	FILE *rgb = fopen(tmp, "rb");
 	sprintf(tmp, "%s.pgm", filename);
@@ -368,7 +369,9 @@ static void
 save_rgb(lua_State *L, int step, int depth) {
 	size_t sz = 0;
 	const char * filename = lua_tolstring(L, 1, &sz);
-	char tmp[sz + 5];
+
+	ARRAY(char, tmp, sz + 5);
+
 	int width = (int)lua_tointeger(L, 3);
 	int height = (int)lua_tointeger(L, 4);
 	sprintf(tmp, "%s.ppm", filename);
@@ -404,7 +407,9 @@ static void
 save_alpha(lua_State *L, int step, int depth, int offset) {
 	size_t sz = 0;
 	const char * filename = lua_tolstring(L, 1, &sz);
-	char tmp[sz + 5];
+
+	ARRAY(char, tmp, sz + 5);
+
 	int width = (int)lua_tointeger(L, 3);
 	int height = (int)lua_tointeger(L, 4);
 	sprintf(tmp, "%s.pgm", filename);

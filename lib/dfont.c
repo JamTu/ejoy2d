@@ -213,7 +213,7 @@ adjust_space(struct dfont *df, struct hash_rect *hr) {
 }
 
 static struct hash_rect *
-release_char(struct dfont *df, int c,int font) {
+release_char(struct dfont *df, int c, int font) {
 	int h = hash(c, font);
 	struct hash_rect *hr = df->hash[h];
 	if (hr->c == c && hr->font == font) {
@@ -243,7 +243,7 @@ release_space(struct dfont *df, int width, int height) {
 	struct hash_rect *hr, *tmp;
 	list_for_each_entry_safe(hr, struct hash_rect, tmp, &df->time, time) {
 		if (hr->version == df->version)
-			return NULL;
+			continue;
 		if (hr->rect.h != height) {
 			continue;
 		}

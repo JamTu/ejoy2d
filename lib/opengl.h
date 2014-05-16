@@ -6,12 +6,13 @@
 #define OPENGLES 2
 #include <OpenGLES/ES2/gl.h>
 
-#elif defined(GLFW)
+#elif defined(linux) || defined(__linux) || defined(__linux__)
 
-#include <GLFW/glfw3.h>
+#define OPENGLES 2
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #else
-
 #define OPENGLES 0
 #include <GL/glew.h>
 

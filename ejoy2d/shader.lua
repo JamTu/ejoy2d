@@ -42,11 +42,32 @@ varying vec2 v_texcoord;
 varying vec4 v_color;
 
 uniform sampler2D texture0;
+uniform vec3 additive;
 
 void main() {
 	float c = texture2D(texture0, v_texcoord).w;
-	gl_FragColor.xyz = v_color.xyz * c;
-	gl_FragColor.w = c;
+	float alpha = clamp(c, 0.0, 0.5) * 2.0;
+
+	gl_FragColor.xyz = (v_color.xyz + additive) * alpha;
+	gl_FragColor.w = alpha;
+	gl_FragColor *= v_color.w;
+}
+]]
+
+local text_edge_fs = [[
+varying vec2 v_texcoord;
+varying vec4 v_color;
+
+uniform sampler2D texture0;
+uniform vec3 additive;
+
+void main() {
+	float c = texture2D(texture0, v_texcoord).w;
+	float alpha = clamp(c, 0.0, 0.5) * 2.0;
+	float color = (clamp(c, 0.5, 1.0) - 0.5) * 2.0;
+
+	gl_FragColor.xyz = (v_color.xyz + additive) * color;
+	gl_FragColor.w = alpha;
 	gl_FragColor *= v_color.w;
 }
 ]]
@@ -70,25 +91,44 @@ void main()
 }
 ]]
 
+local color_fs = [[
+varying vec2 v_texcoord;
+varying vec4 v_color;
+uniform sampler2D texture0;
+uniform vec3 additive;
+
+void main()
+{
+	vec4 tmp = texture2D(texture0, v_texcoord);
+	gl_FragColor.xyz = v_color.xyz * tmp.w;
+	gl_FragColor.w = tmp.w;
+}
+]]
+
 local shader = {}
 
 local shader_name = {
 	NORMAL = 0,
 	TEXT = 1,
-	GRAY = 2,
+	EDGE = 2,
+	GRAY = 3,
+	COLOR = 4,
 }
 
 function shader.init()
 	s.load(shader_name.NORMAL, PRECISION .. sprite_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.TEXT, PRECISION .. text_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.EDGE, PRECISION .. text_edge_fs, PRECISION .. sprite_vs)
 	s.load(shader_name.GRAY, PRECISION .. gray_fs, PRECISION .. sprite_vs)
+	s.load(shader_name.COLOR, PRECISION .. color_fs, PRECISION .. sprite_vs)
 end
 
 shader.draw = s.draw
 shader.blend = s.blend
+shader.clear = s.clear
 
 function shader.id(name)
-	local id = assert(shader_name[name] , "Invalid shader name")
+	local id = assert(shader_name[name] , "Invalid shader name " .. name)
 	return id
 end
 

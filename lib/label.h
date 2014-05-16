@@ -13,6 +13,8 @@ void label_unload();
 void label_flush();
 
 void label_draw(const char * str, struct pack_label * l, struct srt *srt, const struct sprite_trans *arg);
+void label_size(const char * str, struct pack_label * l, int* width, int* height);
+void label_gen_outline(int outline);
 
 struct font_context {
 	int w;
@@ -20,6 +22,7 @@ struct font_context {
 	int ascent;
 	void * font;
 	void * dc;
+//    int edge;
 };
 
 void font_size(const char *str, int unicode, struct font_context * ctx);

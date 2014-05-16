@@ -33,10 +33,12 @@ function sprite_meta.__index(spr, key)
 		return getter(spr)
 	end
 	local child = fetch(spr, key)
+
 	if child then
 		return child
 	else
-		error("Unsupport get " ..  key)
+		print("Unsupport get " ..  key)
+		return nil
 	end
 end
 
@@ -85,7 +87,7 @@ function sprite.label(tbl)
 	if l then
 		l = debug.setmetatable(l, sprite_meta)
 		if tbl.text then
-			l.name = tbl.text
+			l.text = tbl.text
 		end
 		return l
 	end

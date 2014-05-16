@@ -17,7 +17,7 @@
 
 #define POSITION_TYPE_FREE 0
 #define POSITION_TYPE_RELATIVE 1
-#define POSTTION_TYPE_GROUPED 2
+#define POSITION_TYPE_GROUPED 2
 
 /** The Particle emitter lives forever */
 #define DURATION_INFINITY (-1)
@@ -43,6 +43,7 @@ struct color4f {
 struct particle {
 	struct point pos;
 	struct point startPos;
+	struct matrix emitMatrix;
 
 	struct color4f color;
 	struct color4f deltaColor;
@@ -127,6 +128,7 @@ struct particle_config {
 
 	/** How many seconds the emitter will run. -1 means 'forever' */
 	float duration;
+	struct matrix* emitterMatrix;
 	/** sourcePosition of the emitter */
 	struct point sourcePosition;
 	/** Position variance of the emitter */
@@ -214,7 +216,7 @@ struct particle_system {
 
 void init_with_particles(struct particle_system *ps, int numberOfParticles);
 void particle_system_update(struct particle_system *ps, float dt);
-void calc_particle_system_mat(struct particle * p, struct matrix *m);
+void calc_particle_system_mat(struct particle * p, struct matrix *m, int edge);
 void particle_system_reset(struct particle_system *ps);
 
 int ejoy2d_particle(lua_State *L);

@@ -80,8 +80,12 @@ ejoy2d_win_update() {
 
 void
 ejoy2d_win_frame() {
-	glClear(GL_COLOR_BUFFER_BIT);
 	ejoy2d_game_drawframe(G->game);
+}
+
+void
+ejoy2d_win_resume(){
+    ejoy2d_game_resume(G->game);
 }
 
 void

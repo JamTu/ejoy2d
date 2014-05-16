@@ -50,10 +50,10 @@ traceback(lua_State *L) {
 
 #ifdef __APPLE__
 static const char*
-_read_exepath() {
+_read_exepath(char * buf, int bufsz) {
     return getenv("_");
 }
-#define read_exepath(buf,bufsz) _read_exepath()
+#define read_exepath(buf,bufsz) _read_exepath(buf,bufsz)
 
 #else
 static const char*
@@ -111,7 +111,6 @@ ejoy2d_win_update() {
 
 void
 ejoy2d_win_frame() {
-	glClear(GL_COLOR_BUFFER_BIT);
 	ejoy2d_game_drawframe(G->game);
 }
 

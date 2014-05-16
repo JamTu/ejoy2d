@@ -136,6 +136,9 @@ scale_mat(int *m, int sx, int sy) {
 
 void
 matrix_srt(struct matrix *mm, const struct srt *srt) {
+	if (!srt) {
+		return;
+	}
 	scale_mat(mm->m, srt->scalex, srt->scaley);
 	rot_mat(mm->m, srt->rot);
 	mm->m[4] += srt->offx;
@@ -161,6 +164,23 @@ matrix_sr(struct matrix *mat, int sx, int sy, int d) {
 	m[0] = m0_cosd /1024;
 	m[1] = m0_sind /1024;
 	m[2] = -m3_sind /1024;
+	m[3] = m3_cosd /1024;
+}
+
+void
+matrix_rs(struct matrix *mat, int sx, int sy, int d) {
+	int *m = mat->m;
+	int cosd = icosd(d);
+	int sind = isind(d);
+
+	int m0_cosd = sx * cosd;
+	int m0_sind = sx * sind;
+	int m3_cosd = sy * cosd;
+	int m3_sind = sy * sind;
+
+	m[0] = m0_cosd /1024;
+	m[1] = m3_sind /1024;
+	m[2] = -m0_sind /1024;
 	m[3] = m3_cosd /1024;
 }
 

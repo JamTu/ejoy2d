@@ -32,14 +32,22 @@ void
 screen_scissor(int x, int y, int w, int h) {
 	y = SCREEN.height - y - h;
 	if (x<0) {
+		w += x;
 		x = 0;
 	} else if (x>SCREEN.width) {
-		x = SCREEN.width;
+		w=0;
+		h=0;
 	}
 	if (y<0) {
+		h += y;
 		y = 0;
 	} else if (y>SCREEN.height) {
-		y = SCREEN.height;
+		w=0;
+		h=0;
+	}
+	if (w<=0 || h<=0) {
+		w=0;
+		h=0;
 	}
 	x *= SCREEN.scale;
 	y *= SCREEN.scale;

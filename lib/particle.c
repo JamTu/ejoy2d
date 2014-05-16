@@ -12,6 +12,8 @@
 #include "spritepack.h"
 
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 
 static inline float
 clampf(float x) {
@@ -24,12 +26,12 @@ clampf(float x) {
 
 inline static float
 RANDOM_M11(unsigned int *seed) {
-	*seed = (*seed * 134775813 + 1) % 0x7fff;
+	*seed = *seed * 134775813 + 1;
 	union {
 		uint32_t d;
 		float f;
 	} u;
-	u.d = (((uint32_t)rand() & 0x7fff) << 8) | 0x40000000;
+	u.d = (((uint32_t)(*seed) & 0x7fff) << 8) | 0x40000000;
 	return u.f - 3.0f;
 }
 
@@ -42,6 +44,17 @@ _initParticle(struct particle_system *ps, struct particle* particle) {
 		return;
 	}
 
+	int *mat = particle->emitMatrix.m;
+	if (ps->config->emitterMatrix) {
+		memcpy(mat, ps->config->emitterMatrix->m, 6 * sizeof(int));
+	} else {
+		mat[0] = 1024;
+		mat[1] = 0;
+		mat[2] = 0;
+		mat[3] = 1024;
+		mat[4] = 0;
+		mat[5] = 0;
+	}
 	particle->startPos = ps->config->sourcePosition;
 	particle->pos.x = ps->config->posVar.x * RANDOM_M11(&RANDSEED);
 	particle->pos.y = ps->config->posVar.y * RANDOM_M11(&RANDSEED);
@@ -166,7 +179,7 @@ _normalize_point(struct point *p, struct point *out) {
 
 static void
 _update_particle(struct particle_system *ps, struct particle *p, float dt) {
-	if (ps->config->positionType == POSITION_TYPE_RELATIVE) {
+	if (ps->config->positionType != POSITION_TYPE_GROUPED) {
 		p->startPos = ps->config->sourcePosition;
 	}
 	// Mode A: gravity, direction, tangential accel & radial accel
@@ -236,9 +249,9 @@ init_with_particles(struct particle_system *ps, int numberOfParticles) {
 	ps->matrix = (struct matrix *)(ps->particles + numberOfParticles);
 	ps->config = (struct particle_config*)(ps->matrix + numberOfParticles);
 	ps->allocatedParticles = numberOfParticles;
-	ps->isActive = true;
+	ps->isActive = false;
 	ps->config->totalParticles = numberOfParticles;
-	ps->config->positionType = POSITION_TYPE_FREE;
+	ps->config->positionType = POSITION_TYPE_RELATIVE;
 	ps->config->emitterMode = PARTICLE_MODE_GRAVITY;
 }
 
@@ -251,15 +264,19 @@ particle_system_reset(struct particle_system *ps) {
 }
 
 void
-calc_particle_system_mat(struct particle * p, struct matrix *m) {
+calc_particle_system_mat(struct particle * p, struct matrix *m, int edge) {
 	matrix_identity(m);
 	struct srt srt;
 	srt.rot = p->rotation * 1024 / 360;
-	srt.scalex = p->size * SCREEN_SCALE;
+	srt.scalex = p->size * 1024 / edge;
 	srt.scaley = srt.scalex;
 	srt.offx = (p->pos.x + p->startPos.x) * SCREEN_SCALE;
 	srt.offy = (p->pos.y + p->startPos.y) * SCREEN_SCALE;
 	matrix_srt(m, &srt);
+
+	struct matrix tmp;
+	memcpy(tmp.m, m, sizeof(int) * 6);
+	matrix_mul(m, &tmp, &p->emitMatrix);
 }
 
 void
