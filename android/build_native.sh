@@ -24,6 +24,6 @@ fi
 
 ndk-build -C "." $* "NDK_MODULE_PATH=jni/ndk_modules"
 ant debug -q
-adb uninstall com.example.ejoy2d
-adb install bin/ejoy2d-debug.apk
-adb logcat
+#adb uninstall com.example.ejoy2d
+#adb install bin/ejoy2d-debug.apk
+#adb logcat
