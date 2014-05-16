@@ -11,6 +11,14 @@ For Linux ,
 
 this project use ant build tools to generate apk file.
 
+#### 1. update your android project
+
+```
+    <sdk>/tools/android update project -p <project> -t <target>
+```
+
+#### 2. build it
+
 ```
     $ cd ejoy2d/android
     $ sh build_native.sh
