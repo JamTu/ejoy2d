@@ -1,3 +1,7 @@
 [submodule "android/jni/ndk_modules/miniunz"]
 	path = android/jni/ndk_modules/miniunz
 	url = git@github.com:hanxi/ndk-unzip.git
+[submodule "android/jni/ndk_modules/freetype"]
+	path = android/jni/ndk_modules/freetype
+	url = git@github.com:hanxi/libfreetype-android.git
+
